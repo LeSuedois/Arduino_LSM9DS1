@@ -32,6 +32,12 @@
 // magnetometer
 #define LSM9DS1_ADDRESS_M          0x1e
 
+#define LSM9DS1_OFFSET_X_REG_L_M	         0x05
+#define LSM9DS1_OFFSET_X_REG_H_M	         0x06
+#define LSM9DS1_OFFSET_Y_REG_L_M	         0x07
+#define LSM9DS1_OFFSET_Y_REG_H_M	         0x08
+#define LSM9DS1_OFFSET_Z_REG_L_M	         0x09
+#define LSM9DS1_OFFSET_Z_REG_H_M           0x0a
 #define LSM9DS1_CTRL_REG1_M        0x20
 #define LSM9DS1_CTRL_REG2_M        0x21
 #define LSM9DS1_CTRL_REG3_M        0x22
@@ -70,7 +76,7 @@ int LSM9DS1Class::begin()
   }
 
   writeRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG1_G, 0x78); // 119 Hz, 2000 dps, 16 Hz BW
-  writeRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG6_XL, 0x70); // 119 Hz, 4G
+  writeRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG6_XL, 0x73); // 119 Hz, 4G 0x70
 
   writeRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG1_M, 0xb4); // Temperature compensation enable, medium performance, 20 Hz
   writeRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG2_M, 0x00); // 4 Gauss
@@ -125,6 +131,25 @@ int LSM9DS1Class::readAcceleration(float& x, float& y, float& z)
   return 1;
 }
 
+int LSM9DS1Class::readRawAcceleration(float& x, float& y, float& z)
+{
+  int16_t data[3];
+
+  if (!readRegisters(LSM9DS1_ADDRESS, LSM9DS1_OUT_X_XL, (uint8_t*)data, sizeof(data))) {
+    x = NAN;
+    y = NAN;
+    z = NAN;
+
+    return 0;
+  }
+
+  x = data[0];
+  y = data[1];
+  z = data[2];
+
+  return 1;
+}
+
 int LSM9DS1Class::accelerationAvailable()
 {
   if (continuousMode) {
@@ -165,6 +190,25 @@ int LSM9DS1Class::readGyroscope(float& x, float& y, float& z)
   return 1;
 }
 
+int LSM9DS1Class::readRawGyroscope(float& x, float& y, float& z)
+{
+  int16_t data[3];
+
+  if (!readRegisters(LSM9DS1_ADDRESS, LSM9DS1_OUT_X_G, (uint8_t*)data, sizeof(data))) {
+    x = NAN;
+    y = NAN;
+    z = NAN;
+
+    return 0;
+  }
+
+  x = data[0];
+  y = data[1];
+  z = data[2];
+
+  return 1;
+}
+
 int LSM9DS1Class::gyroscopeAvailable()
 {
   if (readRegister(LSM9DS1_ADDRESS, LSM9DS1_STATUS_REG) & 0x02) {
@@ -198,6 +242,25 @@ int LSM9DS1Class::readMagneticField(float& x, float& y, float& z)
   return 1;
 }
 
+int LSM9DS1Class::readRawMagneticField(float& x, float& y, float& z)
+{
+  int16_t data[3];
+
+  if (!readRegisters(LSM9DS1_ADDRESS_M, LSM9DS1_OUT_X_L_M, (uint8_t*)data, sizeof(data))) {
+    x = NAN;
+    y = NAN;
+    z = NAN;
+
+    return 0;
+  }
+
+  x = data[0];// * 4.0 * 100.0 / 32768.0;
+  y = data[1];// * 4.0 * 100.0 / 32768.0;
+  z = data[2];// * 4.0 * 100.0 / 32768.0;
+
+  return 1;
+}
+
 int LSM9DS1Class::magneticFieldAvailable()
 {
   if (readRegister(LSM9DS1_ADDRESS_M, LSM9DS1_STATUS_REG_M) & 0x08) {
@@ -205,6 +268,17 @@ int LSM9DS1Class::magneticFieldAvailable()
   }
 
   return 0;
+}
+
+void LSM9DS1Class::magOffset(uint8_t axis, int16_t offset)
+{
+	if (axis > 2)
+		return;
+	uint8_t msb, lsb;
+	msb = (offset & 0xFF00) >> 8;
+	lsb = offset & 0x00FF;
+	writeRegister(LSM9DS1_ADDRESS_M,LSM9DS1_OFFSET_X_REG_L_M + (2 * axis), lsb);
+	writeRegister(LSM9DS1_ADDRESS_M,LSM9DS1_OFFSET_X_REG_H_M + (2 * axis), msb);
 }
 
 float LSM9DS1Class::magneticFieldSampleRate()
