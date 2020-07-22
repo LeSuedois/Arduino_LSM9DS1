@@ -131,7 +131,7 @@ int LSM9DS1Class::readAcceleration(float& x, float& y, float& z)
   return 1;
 }
 
-int LSM9DS1Class::readRawAcceleration(float& x, float& y, float& z)
+int LSM9DS1Class::readRawAcceleration(int16_t& x, int16_t& y, int16_t& z)
 {
   int16_t data[3];
 
@@ -190,7 +190,7 @@ int LSM9DS1Class::readGyroscope(float& x, float& y, float& z)
   return 1;
 }
 
-int LSM9DS1Class::readRawGyroscope(float& x, float& y, float& z)
+int LSM9DS1Class::readRawGyroscope(int16_t& x, int16_t& y, int16_t& z)
 {
   int16_t data[3];
 
@@ -242,7 +242,7 @@ int LSM9DS1Class::readMagneticField(float& x, float& y, float& z)
   return 1;
 }
 
-int LSM9DS1Class::readRawMagneticField(float& x, float& y, float& z)
+int LSM9DS1Class::readRawMagneticField(int16_t& x, int16_t& y, int16_t& z)
 {
   int16_t data[3];
 
